@@ -104,11 +104,11 @@ def run_pipeline(input_filename):
 
     results = []
 
-    total = min(5, len(df))
+    total = max(0, len(df))
 
     print("\n🤖 AI AGENTIC EVALUATOR STARTED\n")
 
-    for index, row in df.head(5).iterrows():
+    for index, row in df.iterrows():
 
         print(f"\n[{index + 1}/{total}] Evaluating: {row['Full Name']}")
 
@@ -175,7 +175,7 @@ def run_pipeline(input_filename):
             ),
             "AI Verdict": verdict,
             "Failure Reason": reason.strip(),
-            "AI Explanation": ai_output
+            # "AI Explanation": ai_output
         })
 
     # =============================
