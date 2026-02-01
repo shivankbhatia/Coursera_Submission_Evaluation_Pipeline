@@ -70,6 +70,33 @@ VERDICT: FAIL
 # AGENT PIPELINE
 # =====================================================
 
+def ai_failure_reason(student_name, coursera_data, linkedin_data):
+
+    prompt = f"""
+You are an academic evaluator.
+
+The submission has FAILED.
+
+Based ONLY on the following observations, write ONE short sentence
+explaining the primary reason for failure.
+
+Do NOT add suggestions.
+Do NOT add multiple reasons.
+Do NOT exceed one sentence.
+
+Observations:
+- Student name found: {linkedin_data.get("student_name_found")}
+- Public visibility: {linkedin_data.get("public_visibility")}
+- LinkedIn project: {linkedin_data.get("linkedin_project_name")}
+- Coursera project: {linkedin_data.get("coursera_project_name")}
+- Missing mandatory hashtags: {linkedin_data.get("missing_required_hashtags")}
+
+Return ONLY the sentence.
+"""
+
+    return run_local_llm(prompt)
+
+
 def run_pipeline(input_filename):
 
     input_path = os.path.join("data", "inputs", input_filename)
@@ -122,7 +149,16 @@ def run_pipeline(input_filename):
             linkedin_data
         )
 
-        verdict = "PASS" if "VERDICT: PASS" in ai_output.upper() else "FAIL"
+        if "VERDICT: PASS" in ai_output.upper():
+            verdict = "PASS"
+            reason = ""
+        else:
+            verdict = "FAIL"
+            reason = ai_failure_reason(
+                row["Full Name"],
+                coursera_data,
+                linkedin_data
+            )
         print(f"  ✓ Verdict generated: {verdict}")
 
         # =============================
@@ -138,6 +174,7 @@ def run_pipeline(input_filename):
                 linkedin_data.get("missing_required_hashtags", [])
             ),
             "AI Verdict": verdict,
+            "Failure Reason": reason.strip(),
             "AI Explanation": ai_output
         })
 
