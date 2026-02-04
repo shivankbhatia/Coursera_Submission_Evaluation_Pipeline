@@ -4,11 +4,9 @@ import os
 from tools.coursera_tool import verify_coursera_certificate
 from tools.linkedin_tool import get_linkedin_observations
 from utils.local_llm import run_local_llm
+from utils.context_project_match import llm_project_context_match
 
 
-# =====================================================
-# SYSTEM INSTRUCTION (LLM JUDGE)
-# =====================================================
 
 SYSTEM_INSTRUCTION = """
 You are an academic evaluator.
@@ -17,9 +15,8 @@ Judge submission credibility using these rules ONLY:
 
 1. Coursera certificate must be valid.
 2. Student name must match between certificate and LinkedIn.
-3. Project name on LinkedIn must refer to the same project as Coursera.
+3. LinkedIn post must clearly mention the Coursera project.
 4. Ignore hashtags completely.
-5. Judge based on credibility and consistency, not formatting.
 
 Return exactly one line:
 VERDICT: PASS
@@ -28,68 +25,79 @@ VERDICT: FAIL
 """
 
 
-# =====================================================
-# FINAL LLM JUDGMENT FUNCTION
-# =====================================================
-
 def ai_final_evaluation(student_name, coursera_data, linkedin_data):
-    """
-    Uses LLM ONLY to judge credibility, not to detect errors.
-    """
+
+    # print("\n========== RAW COURSERA DATA ==========")
+    # print(coursera_data)
+
+    # print("\n========== RAW LINKEDIN DATA ==========")
+    # print(linkedin_data)
 
     linkedin_summary = f"""
 Public visibility: {linkedin_data.get("public_visibility")}
 Student name found: {linkedin_data.get("student_name_found")}
-LinkedIn project name: {linkedin_data.get("linkedin_project_name")}
-Coursera project name: {linkedin_data.get("coursera_project_name")}
+LinkedIn mentions Coursera project: {linkedin_data.get("project_match")}
+Coursera project name: {coursera_data.get("coursera_project_name")}
 """
 
-    prompt = f"""
+    llm_prompt = f"""
 {SYSTEM_INSTRUCTION}
 
 Student name:
 {student_name}
 
-Coursera verification:
-{coursera_data.get("verification_line")}
-
 LinkedIn observations:
 {linkedin_summary}
 """
 
-    return run_local_llm(prompt)
+    # print("\n========== DATA SENT TO LLM ==========")
+    # print(llm_prompt)
+    # print("\n======================================\n")
+
+    return run_local_llm(llm_prompt)
 
 
-# =====================================================
-# DETERMINISTIC FAILURE REASONING
-# =====================================================
+def llm_name_match(
+    student_name,
+    coursera_name_found,
+    linkedin_name_found,
+    linkedin_username,
+    linkedin_description,
+    coursera_project_name
+):
 
-def determine_failure_reason(roll, project, seen_projects, coursera_data, linkedin_data):
-    """
-    Determines ONE primary failure reason deterministically.
-    """
+    prompt = f"""
+You are an academic evaluator.
 
-    if project in seen_projects.get(roll, set()):
-        return "Duplicate project submission for the same roll number."
+Your job is to decide whether the LinkedIn post
+describes work related to the project title.
 
-    if not coursera_data.get("verification_line"):
-        return "Coursera certificate could not be verified."
+Project Title:
+{coursera_project_name}
 
-    if not linkedin_data.get("student_name_found"):
-        return "Student name does not match between certificate and LinkedIn post."
+LinkedIn Post:
+{linkedin_description}
 
-    if not linkedin_data.get("linkedin_project_name"):
-        return "Project name could not be identified in the LinkedIn post."
+IMPORTANT:
+Respond ONLY with valid JSON.
+Do not add explanation outside JSON.
+Do not add markdown.
+Do not add extra text.
 
-    if not linkedin_data.get("public_visibility"):
-        return "LinkedIn post is not publicly visible."
+Return EXACTLY:
 
-    return "LinkedIn post does not credibly match the Coursera certificate."
+{{
+ "match": true or false,
+ "confidence": number between 0 and 100,
+ "reason": "one short sentence"
+}}
+"""
 
 
-# =====================================================
-# AGENT PIPELINE
-# =====================================================
+    result = run_local_llm(prompt)
+
+    return "TRUE" in result.upper()
+
 
 def run_pipeline(input_filename):
 
@@ -97,110 +105,106 @@ def run_pipeline(input_filename):
     df = pd.read_csv(input_path)
 
     results = []
-    seen_projects_by_roll = {}
+    seen_certificates_by_roll = {}
 
-    total = len(df)
+    subset = df.iloc[39:60]
 
-    print("\n🤖 AI AGENTIC EVALUATOR STARTED\n")
+    for index, row in subset.iterrows():
 
-    for index, row in df.head(57).iterrows():
-
-        print(f"\n[{index + 1}/{total}] Evaluating: {row['Full Name']}")
+        print(f"\n[{index + 1}/{len(df)}] Evaluating: {row['Full Name']}")
 
         roll = row["Roll Number"]
+        certificate_link = row["Coursera completion certificate link"].strip()
 
         # =============================
-        # 1. Coursera Perception
+        # Coursera Perception
         # =============================
-        print("  ▶ Checking Coursera certificate...")
         coursera_data = verify_coursera_certificate(
-            row["Coursera completion certificate link"],
+            certificate_link,
             row["Full Name"]
         )
-        print("  ✓ Coursera data extracted")
 
-        verification_line = coursera_data.get("verification_line", "")
-        coursera_project = ""
-
-        if "completion of" in verification_line:
-            coursera_project = verification_line.split("completion of")[-1].strip()
-
-        project_key = coursera_project.lower()
-
-        if roll not in seen_projects_by_roll:
-            seen_projects_by_roll[roll] = set()
-
-        is_duplicate = project_key in seen_projects_by_roll[roll]
+        coursera_project = coursera_data.get("coursera_project_name")
 
         # =============================
-        # 2. LinkedIn Perception
+        # LinkedIn Perception
         # =============================
-        print("  ▶ Analyzing LinkedIn post...")
         linkedin_data = get_linkedin_observations(
             row["LinkedIn Post Link"],
             row["Full Name"],
             coursera_project
         )
-        print("  ✓ LinkedIn observations ready")
 
         # =============================
-        # 3. Verdict Logic
+        # Duplicate Certificate Check
         # =============================
+        if roll not in seen_certificates_by_roll:
+            seen_certificates_by_roll[roll] = set()
+
+        is_duplicate = certificate_link in seen_certificates_by_roll[roll]
+
+        if not is_duplicate:
+            seen_certificates_by_roll[roll].add(certificate_link)
+
+        # =============================
+        # Final Decision Logic
+        # =============================
+
+        linkedin_description = linkedin_data.get("linkedin_description", "")
+
+        llm_match_result = {
+            "match": False,
+            "confidence": 0,
+            "reason": ""
+        }
+
         if is_duplicate:
             verdict = "FAIL"
-            reason = "Duplicate project submission for the same roll number."
+            reason = "Duplicate Coursera certificate submission."
+
+        elif linkedin_data.get("project_match"):
+            verdict = "PASS"
+            reason = ""
 
         else:
-            print("  ▶ Running AI judgment (local LLM)...")
-            ai_output = ai_final_evaluation(
-                row["Full Name"],
-                coursera_data,
-                linkedin_data
-            )
-
-            if "VERDICT: PASS" in ai_output.upper():
-                verdict = "PASS"
-                reason = ""
-                seen_projects_by_roll[roll].add(project_key)
-            else:
-                verdict = "FAIL"
-                reason = determine_failure_reason(
-                    roll,
-                    project_key,
-                    seen_projects_by_roll,
-                    coursera_data,
-                    linkedin_data
+            # ⭐ Run LLM ONLY when project_match fails
+            if coursera_project and linkedin_description:
+                llm_match_result = llm_project_context_match(
+                    coursera_project,
+                    linkedin_description
                 )
 
-        print(f"  ✓ Verdict generated: {verdict}")
+            if llm_match_result["match"]:
+                verdict = "PASS"
+                reason = f"LLM Context Match ({llm_match_result['confidence']}%)"
+            else:
+                verdict = "FAIL"
+                reason = "LinkedIn post does not mention the Coursera project."
 
+
+        
         # =============================
-        # 4. Save Result
+        # Output Raw Signals Only
         # =============================
         results.append({
             "Roll Number": roll,
             "Full Name": row["Full Name"],
-            "Coursera Completion Date": coursera_data.get("completion_date"),
-            "Coursera Verification Line": coursera_data.get("verification_line"),
-            "LinkedIn Public": linkedin_data.get("public_visibility"),
-            "LinkedIn Project": linkedin_data.get("linkedin_project_name"),
-            "AI Verdict": verdict,
-            "Failure Reason": reason
+            "Coursera Project": coursera_project,
+            "Duplicate Certificate": is_duplicate,
+            "Project Mention Match": linkedin_data.get("project_match"),
+            "LLM Context Match": llm_match_result["match"],
+            "LLM Confidence": llm_match_result["confidence"],
+            "LLM Reason": llm_match_result["reason"],
+            "Final Verdict": verdict,
+            "Failure Reason": reason,
         })
 
-    # =============================
-    # OUTPUT
-    # =============================
-    output_path = os.path.join("data", "outputs", "Final_Evaluation_2.xlsx")
-    pd.DataFrame(results).to_excel(output_path, index=False)
+    output_path = os.path.join("data", "outputs", "Final_Evaluation_6.csv")
+    pd.DataFrame(results).to_csv(output_path, index=False)
 
-    print("\n✅ Evaluation completed successfully.")
-    print(f"📁 Output saved at: {output_path}")
+    print("\n✅ Debug output generated.")
 
 
-# =====================================================
-# ENTRY POINT
-# =====================================================
 
 if __name__ == "__main__":
     run_pipeline("submission.csv")

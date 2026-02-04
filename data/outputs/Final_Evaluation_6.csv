@@ -1,0 +1,22 @@
+Roll Number,Full Name,Coursera Project,Duplicate Certificate,Project Mention Match,LLM Context Match,LLM Confidence,LLM Reason,Final Verdict,Failure Reason
+102303045,Parth Garg,Breast Cancer Prediction Using Machine Learning,False,True,False,0,,PASS,
+102303048,Sushant Jindal,Build a CI/CD Pipeline with Docker: From Code to Deployment,False,False,True,80,"Conceptual overlap: CI/CD Pipeline, Docker, and code-to-deployment workflow are mentioned. Workflow similarity counts: The post describes a pipeline from code to deployment using Docker, which aligns with the project title.",PASS,LLM Context Match (80%)
+102303048,Sushant Jindal,Working with BigQuery,False,True,False,0,,PASS,
+102303048,Sushant Jindal,Build a CI/CD Pipeline with Docker: From Code to Deployment,True,False,False,0,,FAIL,Duplicate Coursera certificate submission.
+102303048,Sushant Jindal,Introduction to Large Language Models,False,True,False,0,,PASS,
+102303048,Sushant Jindal,Introduction to Generative AI,False,True,False,0,,PASS,
+102303048,Sushant Jindal,Machine Learning Pipelines with Azure ML Studio,False,True,False,0,,PASS,
+102303052,Pratham Garg,Working with BigQuery,False,True,False,0,,PASS,
+102303052,Pratham Garg,Introduction to AI,False,True,False,0,,PASS,
+102303052,pratham garg,Maximize Productivity With AI Tools,False,True,False,0,,PASS,
+102303052,Pratham Garg,Use AI Responsibly,False,False,True,80,"Conceptual overlap detected: 'Manage your professional identity' relates to responsible AI use, and 'Access knowledge, insights and opportunities' implies leveraging AI for personal growth.",PASS,LLM Context Match (80%)
+102303052,pratham garg,Discover the Art of Prompting,False,False,True,80,"The post mentions a certification related to AI, which is conceptually relevant to the project 'Discover the Art of Prompting'. The tools mentioned (Google) are also indirectly related to the project's focus on AI and prompting.",PASS,LLM Context Match (80%)
+102303052,Pratham garg,Discover the Art of Prompting,True,True,False,0,,FAIL,Duplicate Coursera certificate submission.
+102303052,Pratham garg,Stay Ahead of the AI Curve,False,True,False,0,,PASS,
+102303052,Pratham garg,Use AI Responsibly,True,True,False,0,,FAIL,Duplicate Coursera certificate submission.
+102303059,Sanyam Wadhwa,Detecting COVID-19 with Chest X-Ray using PyTorch,False,False,True,80,"The post mentions developing a COVID-19 detection system using convolutional neural networks, which aligns with the project title. The tools mentioned (PyTorch) are not explicitly stated in the post, but TensorFlow is mentioned, and PyTorch is often used for similar tasks. The workflow similarity is high as it involves data preprocessing, model training, evaluation, and performance analysis.",PASS,LLM Context Match (80%)
+102303059,Sanyam wadhwa,Command Line in Linux,False,False,True,85,"The post describes hands-on experience with Linux command-line fundamentals and Python scripting, which directly relates to the project 'Command Line in Linux'. The tools mentioned (Python, Linux) are relevant, and the workflow similarity is high as it involves navigating and managing systems using command-line tools.",PASS,LLM Context Match (85%)
+102303059,Sanyam Wadhwa,Working with BigQuery,False,False,True,80,"Conceptual overlap: data analysis and deployment workflows. Tools mentioned (BigQuery, Docker) relate to project title. Workflow similarity: using cloud tools for large-scale data analysis.",PASS,LLM Context Match (80%)
+102303064,Vani Mohindru,Build a CI/CD Pipeline with Docker: From Code to Deployment,False,True,False,0,,PASS,
+102303064,Vani Mohindru,Working with BigQuery,False,True,False,0,,PASS,
+102303064,Vani Mohindru,PowerBI for Beginners: Data transformation,False,False,True,80,"The post mentions a specific project title, PowerBI for Beginners: Data Transformation, and describes hands-on learning of data cleaning, transformation, and preparation techniques. This aligns with the project's objectives.",PASS,LLM Context Match (80%)

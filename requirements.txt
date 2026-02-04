@@ -1,0 +1,6 @@
+pandas
+requests
+beautifulsoup4
+playwright
+sentence-transformers
+scikit-learn
