@@ -1,208 +1,261 @@
 import pandas as pd
 import os
+import threading
+
+from queue import Queue
+from concurrent.futures import ThreadPoolExecutor
 
 from tools.coursera_tool import verify_coursera_certificate
 from tools.linkedin_tool import get_linkedin_observations
-from utils.local_llm import run_local_llm
 from utils.context_project_match import llm_project_context_match
 
+from utils.google_sheet_logger import init_sheet
+from utils.google_sheet_logger import append_result_live
 
 
-SYSTEM_INSTRUCTION = """
-You are an academic evaluator.
+llm_queue = Queue()
+results_lock = threading.Lock()
 
-Judge submission credibility using these rules ONLY:
+fast_completed = 0
+llm_completed = 0
 
-1. Coursera certificate must be valid.
-2. Student name must match between certificate and LinkedIn.
-3. LinkedIn post must clearly mention the Coursera project.
-4. Ignore hashtags completely.
-
-Return exactly one line:
-VERDICT: PASS
-or
-VERDICT: FAIL
-"""
+counter_lock = threading.Lock()
 
 
-def ai_final_evaluation(student_name, coursera_data, linkedin_data):
-
-    # print("\n========== RAW COURSERA DATA ==========")
-    # print(coursera_data)
-
-    # print("\n========== RAW LINKEDIN DATA ==========")
-    # print(linkedin_data)
-
-    linkedin_summary = f"""
-Public visibility: {linkedin_data.get("public_visibility")}
-Student name found: {linkedin_data.get("student_name_found")}
-LinkedIn mentions Coursera project: {linkedin_data.get("project_match")}
-Coursera project name: {coursera_data.get("coursera_project_name")}
-"""
-
-    llm_prompt = f"""
-{SYSTEM_INSTRUCTION}
-
-Student name:
-{student_name}
-
-LinkedIn observations:
-{linkedin_summary}
-"""
-
-    # print("\n========== DATA SENT TO LLM ==========")
-    # print(llm_prompt)
-    # print("\n======================================\n")
-
-    return run_local_llm(llm_prompt)
+# -------------------------
+# DEBUG STATUS LOGGER
+# -------------------------
+def debug_status(prefix, message):
+    print(f"[{prefix}] {message}")
 
 
-def llm_name_match(
-    student_name,
-    coursera_name_found,
-    linkedin_name_found,
-    linkedin_username,
-    linkedin_description,
-    coursera_project_name
-):
+# -------------------------
+# LLM WORKER THREAD
+# -------------------------
+def llm_worker(results):
 
-    prompt = f"""
-You are an academic evaluator.
+    global llm_completed
 
-Your job is to decide whether the LinkedIn post
-describes work related to the project title.
+    debug_status("LLM", "Worker Started")
 
-Project Title:
-{coursera_project_name}
+    while True:
 
-LinkedIn Post:
-{linkedin_description}
+        task = llm_queue.get()
 
-IMPORTANT:
-Respond ONLY with valid JSON.
-Do not add explanation outside JSON.
-Do not add markdown.
-Do not add extra text.
+        if task is None:
+            debug_status("LLM", "Worker Stopped")
+            break
 
-Return EXACTLY:
+        index, roll, name, coursera_project, completion_date, linkedin_description = task
 
-{{
- "match": true or false,
- "confidence": number between 0 and 100,
- "reason": "one short sentence"
-}}
-"""
+        llm_match_result = llm_project_context_match(
+            coursera_project,
+            linkedin_description
+        )
+
+        if llm_match_result["match"]:
+            verdict = "PASS"
+            reason = f"LLM Context Match ({llm_match_result['confidence']}%)"
+        else:
+            verdict = "FAIL"
+            reason = "LinkedIn post does not mention the Coursera project."
+
+        results[index]["Final Verdict"] = verdict
+        results[index]["Failure Reason"] = reason
+
+        append_result_live([
+            roll,
+            name,
+            coursera_project,
+            completion_date,
+            results[index]["Project Mention Match"],
+            verdict,
+            reason
+        ])
+
+        llm_queue.task_done()
+
+        # ⭐ LLM COUNTER + STATUS
+        with counter_lock:
+            llm_completed += 1
+
+            debug_status(
+                "LLM",
+                f"Completed: {llm_completed} | Remaining Queue: {llm_queue.qsize()}"
+            )
 
 
-    result = run_local_llm(prompt)
+# -------------------------
+# FAST RECORD PROCESSING
+# -------------------------
+def process_fast_record(row, results, seen_certificates_by_roll):
 
-    return "TRUE" in result.upper()
+    global fast_completed
+
+    roll = row["Roll Number"]
+    certificate_link = row["Coursera completion certificate link"].strip()
+
+    coursera_data = verify_coursera_certificate(
+        certificate_link,
+        row["Full Name"]
+    )
+
+    coursera_project = coursera_data.get("coursera_project_name")
+    completion_date = coursera_data.get("completion_date", "")
+
+    linkedin_data = get_linkedin_observations(
+        row["LinkedIn Post Link"],
+        row["Full Name"],
+        coursera_project
+    )
+
+    if roll not in seen_certificates_by_roll:
+        seen_certificates_by_roll[roll] = set()
+
+    is_duplicate = certificate_link in seen_certificates_by_roll[roll]
+
+    if not is_duplicate:
+        seen_certificates_by_roll[roll].add(certificate_link)
+
+    linkedin_description = linkedin_data.get("linkedin_description", "")
+
+    result_entry = {
+        "Roll Number": roll,
+        "Full Name": row["Full Name"],
+        "Coursera Project": coursera_project,
+        "Certificate Completion Date": completion_date,
+        "Project Mention Match": linkedin_data.get("project_match"),
+        "Final Verdict": None,
+        "Failure Reason": "",
+        "Duplicate Certificate": is_duplicate,
+        "LLM Context Match": False,
+        "LLM Confidence": 0,
+    }
+
+    with results_lock:
+        results.append(result_entry)
+        current_index = len(results) - 1
+
+    # -------------------------
+    # FAST VERDICT LOGIC
+    # -------------------------
+
+    if is_duplicate:
+
+        results[current_index]["Final Verdict"] = "FAIL"
+        results[current_index]["Failure Reason"] = "Duplicate certificate"
+
+        append_result_live([
+            roll,
+            row["Full Name"],
+            coursera_project,
+            completion_date,
+            linkedin_data.get("project_match"),
+            "FAIL",
+            "Duplicate certificate"
+        ])
+
+    elif linkedin_data.get("project_match"):
+
+        results[current_index]["Final Verdict"] = "PASS"
+
+        append_result_live([
+            roll,
+            row["Full Name"],
+            coursera_project,
+            completion_date,
+            linkedin_data.get("project_match"),
+            "PASS",
+            ""
+        ])
+
+    else:
+
+        llm_queue.put((
+            current_index,
+            roll,
+            row["Full Name"],
+            coursera_project,
+            completion_date,
+            linkedin_description
+        ))
+
+    # ⭐ FAST COUNTER + STATUS
+    with counter_lock:
+        fast_completed += 1
+
+        debug_status(
+            "FAST",
+            f"Completed: {fast_completed} | LLM Queue: {llm_queue.qsize()}"
+        )
 
 
+# -------------------------
+# MAIN PIPELINE
+# -------------------------
 def run_pipeline(input_filename):
 
     input_path = os.path.join("data", "inputs", input_filename)
     df = pd.read_csv(input_path)
 
+    init_sheet()
+
     results = []
     seen_certificates_by_roll = {}
 
+    NUM_LLM_WORKERS = 2
+    FAST_WORKERS = 4
+
+    workers = []
+
+    for _ in range(NUM_LLM_WORKERS):
+        t = threading.Thread(target=llm_worker, args=(results,))
+        t.start()
+        workers.append(t)
+
     subset = df.iloc[39:60]
 
-    for index, row in subset.iterrows():
+    # FAST PARALLEL
+    with ThreadPoolExecutor(max_workers=FAST_WORKERS) as executor:
 
-        print(f"\n[{index + 1}/{len(df)}] Evaluating: {row['Full Name']}")
+        futures = []
 
-        roll = row["Roll Number"]
-        certificate_link = row["Coursera completion certificate link"].strip()
+        for _, row in subset.iterrows():
+            futures.append(
+                executor.submit(process_fast_record, row, results, seen_certificates_by_roll)
+            )
 
-        # =============================
-        # Coursera Perception
-        # =============================
-        coursera_data = verify_coursera_certificate(
-            certificate_link,
-            row["Full Name"]
-        )
+        for f in futures:
+            f.result()
 
-        coursera_project = coursera_data.get("coursera_project_name")
+    debug_status("PIPELINE", "FAST processing finished")
+    debug_status("PIPELINE", f"Waiting LLM completion | Pending: {llm_queue.qsize()}")
 
-        # =============================
-        # LinkedIn Perception
-        # =============================
-        linkedin_data = get_linkedin_observations(
-            row["LinkedIn Post Link"],
-            row["Full Name"],
-            coursera_project
-        )
+    llm_queue.join()
 
-        # =============================
-        # Duplicate Certificate Check
-        # =============================
-        if roll not in seen_certificates_by_roll:
-            seen_certificates_by_roll[roll] = set()
+    for _ in workers:
+        llm_queue.put(None)
 
-        is_duplicate = certificate_link in seen_certificates_by_roll[roll]
+    for w in workers:
+        w.join()
 
-        if not is_duplicate:
-            seen_certificates_by_roll[roll].add(certificate_link)
+    output_path = os.path.join("data", "outputs", "Final_Evaluation_8.csv")
 
-        # =============================
-        # Final Decision Logic
-        # =============================
+    output_df = pd.DataFrame(results)
 
-        linkedin_description = linkedin_data.get("linkedin_description", "")
+    output_df = output_df[[
+        "Roll Number",
+        "Full Name",
+        "Coursera Project",
+        "Certificate Completion Date",
+        "Project Mention Match",
+        "Final Verdict",
+        "Failure Reason"
+    ]]
 
-        llm_match_result = {
-            "match": False,
-            "confidence": 0,
-            "reason": ""
-        }
+    output_df.to_csv(output_path, index=False)
 
-        if is_duplicate:
-            verdict = "FAIL"
-            reason = "Duplicate Coursera certificate submission."
-
-        elif linkedin_data.get("project_match"):
-            verdict = "PASS"
-            reason = ""
-
-        else:
-            # ⭐ Run LLM ONLY when project_match fails
-            if coursera_project and linkedin_description:
-                llm_match_result = llm_project_context_match(
-                    coursera_project,
-                    linkedin_description
-                )
-
-            if llm_match_result["match"]:
-                verdict = "PASS"
-                reason = f"LLM Context Match ({llm_match_result['confidence']}%)"
-            else:
-                verdict = "FAIL"
-                reason = "LinkedIn post does not mention the Coursera project."
-
-
-        # =============================
-        # Output Raw Signals Only
-        # =============================
-        results.append({
-            "Roll Number": roll,
-            "Full Name": row["Full Name"],
-            "Coursera Project": coursera_project,
-            "Duplicate Certificate": is_duplicate,
-            "Project Mention Match": linkedin_data.get("project_match"),
-            "LLM Context Match": llm_match_result["match"],
-            "LLM Confidence": llm_match_result["confidence"],
-            "LLM Reason": llm_match_result["reason"],
-            "Final Verdict": verdict,
-            "Failure Reason": reason,
-        })
-
-    output_path = os.path.join("data", "outputs", "Final_Evaluation_6.csv")
-    pd.DataFrame(results).to_csv(output_path, index=False)
-
-    print("\n✅ Debug output generated.")
-
+    debug_status("PIPELINE", "Evaluation Complete")
 
 
 if __name__ == "__main__":

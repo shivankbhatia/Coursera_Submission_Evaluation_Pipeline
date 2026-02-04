@@ -1,22 +1,42 @@
 Roll Number,Full Name,Coursera Project,Duplicate Certificate,Project Mention Match,LLM Context Match,LLM Confidence,LLM Reason,Final Verdict,Failure Reason
-102303045,Parth Garg,Breast Cancer Prediction Using Machine Learning,False,True,False,0,,PASS,
-102303048,Sushant Jindal,Build a CI/CD Pipeline with Docker: From Code to Deployment,False,False,True,80,"Conceptual overlap: CI/CD Pipeline, Docker, and code-to-deployment workflow are mentioned. Workflow similarity counts: The post describes a pipeline from code to deployment using Docker, which aligns with the project title.",PASS,LLM Context Match (80%)
-102303048,Sushant Jindal,Working with BigQuery,False,True,False,0,,PASS,
-102303048,Sushant Jindal,Build a CI/CD Pipeline with Docker: From Code to Deployment,True,False,False,0,,FAIL,Duplicate Coursera certificate submission.
-102303048,Sushant Jindal,Introduction to Large Language Models,False,True,False,0,,PASS,
-102303048,Sushant Jindal,Introduction to Generative AI,False,True,False,0,,PASS,
-102303048,Sushant Jindal,Machine Learning Pipelines with Azure ML Studio,False,True,False,0,,PASS,
-102303052,Pratham Garg,Working with BigQuery,False,True,False,0,,PASS,
-102303052,Pratham Garg,Introduction to AI,False,True,False,0,,PASS,
-102303052,pratham garg,Maximize Productivity With AI Tools,False,True,False,0,,PASS,
-102303052,Pratham Garg,Use AI Responsibly,False,False,True,80,"Conceptual overlap detected: 'Manage your professional identity' relates to responsible AI use, and 'Access knowledge, insights and opportunities' implies leveraging AI for personal growth.",PASS,LLM Context Match (80%)
-102303052,pratham garg,Discover the Art of Prompting,False,False,True,80,"The post mentions a certification related to AI, which is conceptually relevant to the project 'Discover the Art of Prompting'. The tools mentioned (Google) are also indirectly related to the project's focus on AI and prompting.",PASS,LLM Context Match (80%)
-102303052,Pratham garg,Discover the Art of Prompting,True,True,False,0,,FAIL,Duplicate Coursera certificate submission.
-102303052,Pratham garg,Stay Ahead of the AI Curve,False,True,False,0,,PASS,
-102303052,Pratham garg,Use AI Responsibly,True,True,False,0,,FAIL,Duplicate Coursera certificate submission.
-102303059,Sanyam Wadhwa,Detecting COVID-19 with Chest X-Ray using PyTorch,False,False,True,80,"The post mentions developing a COVID-19 detection system using convolutional neural networks, which aligns with the project title. The tools mentioned (PyTorch) are not explicitly stated in the post, but TensorFlow is mentioned, and PyTorch is often used for similar tasks. The workflow similarity is high as it involves data preprocessing, model training, evaluation, and performance analysis.",PASS,LLM Context Match (80%)
-102303059,Sanyam wadhwa,Command Line in Linux,False,False,True,85,"The post describes hands-on experience with Linux command-line fundamentals and Python scripting, which directly relates to the project 'Command Line in Linux'. The tools mentioned (Python, Linux) are relevant, and the workflow similarity is high as it involves navigating and managing systems using command-line tools.",PASS,LLM Context Match (85%)
-102303059,Sanyam Wadhwa,Working with BigQuery,False,False,True,80,"Conceptual overlap: data analysis and deployment workflows. Tools mentioned (BigQuery, Docker) relate to project title. Workflow similarity: using cloud tools for large-scale data analysis.",PASS,LLM Context Match (80%)
-102303064,Vani Mohindru,Build a CI/CD Pipeline with Docker: From Code to Deployment,False,True,False,0,,PASS,
-102303064,Vani Mohindru,Working with BigQuery,False,True,False,0,,PASS,
 102303064,Vani Mohindru,PowerBI for Beginners: Data transformation,False,False,True,80,"The post mentions a specific project title, PowerBI for Beginners: Data Transformation, and describes hands-on learning of data cleaning, transformation, and preparation techniques. This aligns with the project's objectives.",PASS,LLM Context Match (80%)
+102303064,Vani Mohindru,Data Modeling with Power BI: Advanced DAX Calculations,False,True,False,0,,PASS,
+102303064,Vani Mohindru,Mastering Data Analysis with Pandas,False,True,False,0,,PASS,
+102303066,RAGHAV GARG,Introduction to Data Analysis using Microsoft Excel,False,False,True,80,"Conceptual overlap: Data Analysis using Microsoft Excel aligns with project title. Tools mentioned (Microsoft Excel) relate to project tools. Workflow similarity: Hands-on experience in data cleaning, analysis, and visualization is consistent with typical workflow for a Data Analysis course.",PASS,LLM Context Match (80%)
+102303066,RAGHAV GARG,Working with BigQuery,False,True,False,0,,PASS,
+102303066,Raghav Garg,Create a Project Management Tracker using Microsoft Excel,False,False,True,80,Conceptual overlap: Project Management Tracker using Microsoft Excel matches project title. Tools mentioned (Microsoft Excel) relate to project tools. Workflow similarity: Building tracking systems and monitoring project status aligns with project goals.,PASS,LLM Context Match (80%)
+102303066,Raghav Garg,Using Basic Formulas and Functions in Microsoft Excel,False,False,True,80,"The post mentions a specific project title and describes applying core formulas and functions in Microsoft Excel, which aligns with the project's objectives. The tools mentioned (Microsoft Excel) are directly related to the project.",PASS,LLM Context Match (80%)
+102303067,Bhaumik,Working with BigQuery,False,True,False,0,,PASS,
+102303068,Raiza Duggal,Working with BigQuery,False,True,False,0,,PASS,
+102303068,Raiza Duggal,Build a CI/CD Pipeline with Docker: From Code to Deployment,False,True,False,0,,PASS,
+102303068,Raiza Duggal,Basic Image Classification with TensorFlow,False,True,False,0,,PASS,
+102303068,Raiza Duggal,Scikit-Learn For Machine Learning Classification Problems,False,True,False,0,,PASS,
+102303068,Raiza Duggal,NLP: Twitter Sentiment Analysis,False,True,False,0,,PASS,
+102303068,Raiza Duggal,Titanic Survival Prediction Using Machine Learning,False,True,False,0,,PASS,
+102303068,Raiza Duggal,Introduction to Javascript: The Basics,False,False,True,80,"The post mentions a certification in 'Introduction to Javascript: The Basics' which directly relates to the project title. However, there's no mention of specific tools or workflow details that would increase confidence.",PASS,LLM Context Match (80%)
+102303068,Raiza Duggal,Detecting COVID-19 with Chest X-Ray using PyTorch,False,True,False,0,,PASS,
+102303078,Vani Goyal,Courses & Credentials From Top Educators. Join for Free | Coursera,False,False,True,80,"The post mentions working with BigQuery, which relates to the Coursera project 'Courses & Credentials From Top Educators', and also mentions UCS654-Predictive Analytics coursework, which has a conceptual overlap with the project title. The workflow similarity is high as it involves analyzing large datasets using SQL queries.",PASS,LLM Context Match (80%)
+102303078,Vani Goyal,Courses & Credentials From Top Educators. Join for Free | Coursera,False,False,True,80,"Conceptual overlap detected: project involves building a CI/CD pipeline with Docker, which aligns with Coursera's 'Build a CI/CD Pipeline with Docker' project. Tools mentioned (Docker, GitHub Actions, AWS) are also relevant to the project.",PASS,LLM Context Match (80%)
+102303078,Vani Goyal,Basic Image Classification with TensorFlow,False,True,False,0,,PASS,
+102303078,Vani Goyal,Introduction to Business Analysis Using Spreadsheets: Basics,False,True,False,0,,PASS,
+102303078,Vani Goyal,Mastering Data Analysis with Pandas,False,True,False,0,,PASS,
+102303078,Vani Goyal,Excel for Beginners: Pivot Tables,False,True,False,0,,PASS,
+102303078,Vani Goyal,Python for Data Analysis: Pandas & NumPy,False,True,False,0,,PASS,
+102303078,Vani Goyal,Get started with Mural,False,True,False,0,,PASS,
+102303088,Haryiank Kumra,Build a CI/CD Pipeline with Docker: From Code to Deployment,False,True,False,0,,PASS,
+102303088,Haryiank Kumra,Working with BigQuery,False,True,False,0,,PASS,
+102303088,Haryiank Kumra,Working with Subqueries in SQL,False,True,False,0,,PASS,
+102303088,Haryiank Kumra,Master Data Analysis with Pandas: Learning Path 1 (Enhanced),False,True,False,0,,PASS,
+102303088,Haryiank Kumra,Python for Beginners: Data Structures,False,True,False,0,,PASS,
+102303088,Haryiank Kumra,Tweet Emotion Recognition with TensorFlow,False,True,False,0,,PASS,
+102303104,Ayush Kaushik,Build a CI/CD Pipeline with Docker: From Code to Deployment,False,False,True,80,"The post mentions 'CI/CD Pipeline' and 'Docker', which are directly related to the project title. The workflow stages from code to deployment also align with the project's objectives.",PASS,LLM Context Match (80%)
+102303104,Ayush Kaushik,Build a CI/CD Pipeline with Docker: From Code to Deployment,True,False,False,0,,FAIL,Duplicate Coursera certificate submission.
+102303104,Ayush Kaushik,Working with BigQuery,False,False,True,80,"Conceptual overlap: Predictive Analytics coursework involves working with Big Data, which aligns with the project title. Tools mentioned (BigQuery) are relevant to querying Big Data using SQL.",PASS,LLM Context Match (80%)
+102303104,Ayush Kaushik,Introduction to Data Analysis using Microsoft Excel,False,True,False,0,,PASS,
+102303104,Ayush Kaushik,Breast Cancer Prediction Using Machine Learning,False,True,False,0,,PASS,
+102303104,Ayush Kaushik,Mastering Data Analysis with Pandas,False,True,False,0,,PASS,
+102303104,Ayush Kaushik,PowerBI for Beginners: Data transformation,False,True,False,0,,PASS,
+102303112,Atishay Jain,Working with BigQuery,False,True,False,0,,PASS,
+102303112,Atishay Jain,Build a CI/CD Pipeline with Docker: From Code to Deployment,False,True,False,0,,PASS,
+102303112,Atishay Jain,Getting Started with Azure DevOps Boards,False,False,True,80,"Conceptual overlap with project title 'Getting Started with Azure DevOps Boards' and mention of industry-standard DevOps tool, task tracking, collaboration, and project organization.",PASS,LLM Context Match (80%)
+102303112,Atishay Jain,Automate tasks and processes with Jira,False,True,False,0,,PASS,
