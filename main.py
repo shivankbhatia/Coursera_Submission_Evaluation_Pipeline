@@ -182,7 +182,6 @@ def run_pipeline(input_filename):
                 reason = "LinkedIn post does not mention the Coursera project."
 
 
-        
         # =============================
         # Output Raw Signals Only
         # =============================

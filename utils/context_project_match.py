@@ -66,10 +66,6 @@ Return STRICT JSON only:
 
     raw_output = run_llama(prompt)
 
-    print("\n===== LLM RAW OUTPUT =====")
-    print(raw_output)
-    print("==========================\n")
-
 
     # -------------------------
     # SAFE JSON PARSE
