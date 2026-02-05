@@ -88,11 +88,11 @@ Certificate Verification Module
         ↓
 LinkedIn Post Analysis Module
         ↓
-Identity Verification Layer
-        ↓
 Duplicate Certificate Detection
         ↓
-Rule-Based Credibility Evaluation
+Identity Verification Layer (Rule-Based Check)
+        ↓
+LLM Evaluation 
         ↓
 Final PASS / FAIL Verdict
         ↓
