@@ -101,7 +101,7 @@ Real-Time Google Sheets Logging
 
 ---
 
-![System Architecture](images/architecture.png)
+![System Architecture](architecture.png)
 
 ---
 
