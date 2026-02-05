@@ -1,65 +1,65 @@
-import re
+import requests
+from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright
 
 
-def verify_coursera_certificate(url, expected_name):
-    """
-    Optimized Coursera Sensor
-    Extracts ONLY:
-    1. Completion date
-    2. Verified completion line (name + project)
-    """
+def verify_coursera_certificate(url, expected_name=None):
 
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        context = browser.new_context(viewport={"width": 1280, "height": 800})
-        page = context.new_page()
+    headers = {"User-Agent": "Mozilla/5.0"}
 
-        try:
-            page.goto(url, wait_until="networkidle", timeout=60000)
+    try:
+        # -------------------------
+        # FAST EXTRACTION (Requests)
+        # -------------------------
+        response = requests.get(url, headers=headers, timeout=10)
+        soup = BeautifulSoup(response.text, "html.parser")
 
-            raw_text = page.locator("body").inner_text()
+        # OG extraction
+        og_data = {}
+        for tag in soup.find_all("meta"):
+            if tag.get("property", "").startswith("og:"):
+                og_data[tag["property"]] = tag.get("content", "")
 
-            # -----------------------------
-            # 1. Extract completion date
-            # -----------------------------
-            date_match = re.search(
-                r"(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},\s+\d{4}",
-                raw_text
-            )
+        project_name = og_data.get("og:title")
+        if project_name:
+            project_name = " ".join(project_name.split()[3:])
 
-            completion_date = date_match.group(0) if date_match else "Date not found"
+        # Static HTML text extraction
+        page_text = soup.get_text(separator=" ")
 
-            # -----------------------------------------------
-            # 2. Extract verified completion sentence
-            # -----------------------------------------------
-            verification_pattern = (
-                rf"{re.escape(expected_name)}'s account is verified\. "
-                r"Coursera certifies their successful completion of .+"
-            )
+        name_found = False
 
-            verification_match = re.search(verification_pattern, raw_text)
+        if expected_name and expected_name.lower() in page_text.lower():
+            name_found = True
 
-            verification_line = (
-                verification_match.group(0)
-                if verification_match
-                else "Verification line not found"
-            )
+        # -------------------------
+        # PLAYWRIGHT FALLBACK
+        # -------------------------
+        if not name_found and expected_name:
 
-            return {
-                "Cert_Status": "Success",
-                "completion_date": completion_date,
-                "verification_line": verification_line,
-                "raw_text": f"{completion_date}\n{verification_line}"
-            }
+            print("⚠ Name not found in static HTML → Using Playwright fallback")
 
-        except Exception as e:
-            return {
-                "Cert_Status": f"Error: {str(e)[:60]}",
-                "completion_date": "",
-                "verification_line": "",
-                "raw_text": ""
-            }
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=True)
+                page = browser.new_page()
 
-        finally:
-            browser.close()
+                page.goto(url, wait_until="networkidle")
+
+                rendered_text = page.locator("body").inner_text()
+
+                if expected_name.lower() in rendered_text.lower():
+                    name_found = True
+
+                browser.close()
+
+        return {
+            "Cert_Status": "Success",
+            "coursera_project_name": project_name,
+            "student_name_found": name_found,
+        }
+
+    except Exception as e:
+        return {
+            "Cert_Status": "Error",
+            "error": str(e)
+        }

@@ -1,54 +1,99 @@
 import requests
-from bs4 import BeautifulSoup
 import re
+from bs4 import BeautifulSoup
+from playwright.sync_api import sync_playwright
 
 
-REQUIRED_HASHTAGS = [
-    "#TIET",
-    "#ThaparUniversity",
-    "#ThaparOutcomeBasedLearning",
-    "#ThaparCoursera",
-    "#Coursera",
-    "#UCS654_Predictive_Analytics"
-]
+def normalize_name(text):
+    return re.sub(r"[^a-z]", "", text.lower()) if text else ""
 
 
-def normalize(text):
-    if not text:
-        return ""
-    return re.sub(r"\s+", " ", text.lower().strip())
+def extract_linkedin_username(url):
 
+    match = re.search(r"linkedin\.com/(in|posts)/([^/?]+)", url)
 
-def extract_project_name(description):
-    """
-    Attempts to extract the project name from LinkedIn description.
-    Handles quotes and formatting variations.
-    """
-
-    if not description:
-        return None
-
-    patterns = [
-        r'completed.*?[“"](.+?)[”"]',                    # “Working with BigQuery”
-        r'completed.*?[\'"](.+?)[\'"]',                  # 'Working with BigQuery'
-        r'completed.*?(Working with [A-Za-z0-9\s]+)',    # fallback
-    ]
-
-    for pattern in patterns:
-        match = re.search(pattern, description, re.IGNORECASE)
-        if match:
-            return match.group(1).strip()
+    if match:
+        return match.group(2)
 
     return None
 
 
-def get_linkedin_observations(url, student_name, coursera_project_name):
-    """
-    LinkedIn Observation Sensor
+def username_matches_student(username, student_name):
 
-    This tool DOES NOT make verdict decisions.
-    It only extracts observable evidence for the LLM judge.
-    """
+    if not username:
+        return False
+
+    return normalize_name(student_name) in normalize_name(username)
+
+
+def extract_name_from_og_title(og_title):
+
+    if not og_title:
+        return None
+
+    return og_title.split("|")[0].strip()
+
+
+def verify_linkedin_identity(url, student_name):
+
+    # ------------------------
+    # Step 1 → Username Match
+    # ------------------------
+    username = extract_linkedin_username(url)
+
+    if username_matches_student(username, student_name):
+        return True
+
+    # ------------------------
+    # Step 2 → OG Title Match
+    # ------------------------
+    try:
+        headers = {"User-Agent": "Mozilla/5.0"}
+        response = requests.get(url, headers=headers, timeout=10)
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        og_title = None
+        for tag in soup.find_all("meta"):
+            if tag.get("property") == "og:title":
+                og_title = tag.get("content")
+
+        profile_name = extract_name_from_og_title(og_title)
+
+        if profile_name and normalize_name(student_name) in normalize_name(profile_name):
+            return True
+
+    except:
+        pass
+
+    # ------------------------
+    # Step 3 → Playwright fallback
+    # ------------------------
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            page = browser.new_page()
+
+            page.goto(url, wait_until="networkidle")
+
+            rendered_text = page.locator("body").inner_text()
+
+            browser.close()
+
+            return normalize_name(student_name) in normalize_name(rendered_text)
+
+    except:
+        return False
+
+
+def check_project_presence(linkedin_text, coursera_project):
+
+    if not linkedin_text or not coursera_project:
+        return False
+
+    return coursera_project.lower() in linkedin_text.lower()
+
+
+def get_linkedin_observations(url, student_name, coursera_project_name):
 
     headers = {"User-Agent": "Mozilla/5.0"}
 
@@ -56,67 +101,29 @@ def get_linkedin_observations(url, student_name, coursera_project_name):
         response = requests.get(url, headers=headers, timeout=10)
         soup = BeautifulSoup(response.text, "html.parser")
 
-        # -------------------------
-        # Extract Open Graph data
-        # -------------------------
         og = {}
         for tag in soup.find_all("meta"):
             if tag.get("property", "").startswith("og:"):
-                og[tag.get("property")] = tag.get("content", "").strip()
+                og[tag["property"]] = tag.get("content", "")
 
-        title = og.get("og:title", "")
         description = og.get("og:description", "")
-
-        combined_text = f"{title} {description}"
-
-        # -------------------------
-        # Observations
-        # -------------------------
         is_public = bool(description.strip())
 
-        name_found = normalize(student_name) in normalize(combined_text)
+        # ⭐ Identity verification using username + fallback
+        name_match = verify_linkedin_identity(url, student_name)
 
-        linkedin_project = extract_project_name(description)
+        project_match = check_project_presence(description, coursera_project_name)
 
-        detected_hashtags = re.findall(r"#\w+", description)
-
-        missing_required_hashtags = [
-            tag for tag in REQUIRED_HASHTAGS
-            if tag.lower() not in map(str.lower, detected_hashtags)
-        ]
-
-        # -------------------------
-        # Structured evidence
-        # -------------------------
         return {
             "status": "Success",
             "public_visibility": is_public,
-            "student_name_found": name_found,
-            "linkedin_project_name": linkedin_project,
-            "coursera_project_name": coursera_project_name,
-            "detected_hashtags": detected_hashtags,
-            "missing_required_hashtags": missing_required_hashtags,
-            "raw_text": f"""
-LinkedIn Title:
-{title}
-
-LinkedIn Description:
-{description}
-
-Extracted Project Name:
-{linkedin_project}
-
-Detected Hashtags:
-{', '.join(detected_hashtags)}
-
-Missing Mandatory Hashtags:
-{', '.join(missing_required_hashtags) if missing_required_hashtags else 'None'}
-"""
+            "student_name_found": name_match,
+            "project_match": project_match,
+            "linkedin_description": description 
         }
 
     except Exception as e:
         return {
-            "status": "Error",
-            "error": str(e),
-            "raw_text": ""
+            "status": "Fail",
+            "error": str(e)
         }

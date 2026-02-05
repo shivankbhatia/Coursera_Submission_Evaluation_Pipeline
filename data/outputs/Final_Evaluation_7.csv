@@ -1,0 +1,42 @@
+Roll Number,Full Name,Coursera Project,Duplicate Certificate,Project Mention Match,LLM Context Match,LLM Confidence,LLM Reason,Final Verdict,Failure Reason
+102303064,Vani Mohindru,Data Modeling with Power BI: Advanced DAX Calculations,False,True,False,0,,PASS,
+102303064,Vani Mohindru,Mastering Data Analysis with Pandas,False,True,False,0,,PASS,
+102303064,Vani Mohindru,PowerBI for Beginners: Data transformation,False,False,True,85,,PASS,LLM Context Match (85%)
+102303066,Raghav Garg,Create a Project Management Tracker using Microsoft Excel,False,False,True,80,,PASS,LLM Context Match (80%)
+102303066,RAGHAV GARG,Working with BigQuery,False,True,False,0,,PASS,
+102303066,Raghav Garg,Using Basic Formulas and Functions in Microsoft Excel,False,False,True,80,,PASS,LLM Context Match (80%)
+102303068,Raiza Duggal,Working with BigQuery,False,True,False,0,,PASS,
+102303068,Raiza Duggal,Basic Image Classification with TensorFlow,False,True,False,0,,PASS,
+102303068,Raiza Duggal,Build a CI/CD Pipeline with Docker: From Code to Deployment,False,True,False,0,,PASS,
+102303068,Raiza Duggal,Scikit-Learn For Machine Learning Classification Problems,False,True,False,0,,PASS,
+102303068,Raiza Duggal,NLP: Twitter Sentiment Analysis,False,True,False,0,,PASS,
+102303068,Raiza Duggal,Introduction to Javascript: The Basics,False,False,True,80,,PASS,LLM Context Match (80%)
+102303066,RAGHAV GARG,Introduction to Data Analysis using Microsoft Excel,False,False,True,80,,PASS,LLM Context Match (80%)
+102303068,Raiza Duggal,Detecting COVID-19 with Chest X-Ray using PyTorch,False,True,False,0,,PASS,
+102303067,Bhaumik,Working with BigQuery,False,True,False,0,,PASS,
+102303068,Raiza Duggal,Titanic Survival Prediction Using Machine Learning,False,True,False,0,,PASS,
+102303078,Vani Goyal,Basic Image Classification with TensorFlow,False,True,False,0,,PASS,
+102303078,Vani Goyal,Introduction to Business Analysis Using Spreadsheets: Basics,False,True,False,0,,PASS,
+102303078,Vani Goyal,Mastering Data Analysis with Pandas,False,True,False,0,,PASS,
+102303078,Vani Goyal,Excel for Beginners: Pivot Tables,False,True,False,0,,PASS,
+102303078,Vani Goyal,Courses & Credentials From Top Educators. Join for Free | Coursera,False,False,True,80,,PASS,LLM Context Match (80%)
+102303078,Vani Goyal,Python for Data Analysis: Pandas & NumPy,False,True,False,0,,PASS,
+102303078,Vani Goyal,Courses & Credentials From Top Educators. Join for Free | Coursera,False,False,True,80,,PASS,LLM Context Match (80%)
+102303088,Haryiank Kumra,Working with BigQuery,False,True,False,0,,PASS,
+102303088,Haryiank Kumra,Working with Subqueries in SQL,False,True,False,0,,PASS,
+102303088,Haryiank Kumra,Build a CI/CD Pipeline with Docker: From Code to Deployment,False,True,False,0,,PASS,
+102303078,Vani Goyal,Get started with Mural,False,True,False,0,,PASS,
+102303088,Haryiank Kumra,Python for Beginners: Data Structures,False,True,False,0,,PASS,
+102303104,Ayush Kaushik,Build a CI/CD Pipeline with Docker: From Code to Deployment,False,False,True,80,,PASS,LLM Context Match (80%)
+102303104,Ayush Kaushik,Working with BigQuery,False,False,True,80,,PASS,LLM Context Match (80%)
+102303104,Ayush Kaushik,Build a CI/CD Pipeline with Docker: From Code to Deployment,True,False,False,0,,FAIL,Duplicate certificate
+102303104,Ayush Kaushik,Introduction to Data Analysis using Microsoft Excel,False,True,False,0,,PASS,
+102303088,Haryiank Kumra,Master Data Analysis with Pandas: Learning Path 1 (Enhanced),False,True,False,0,,PASS,
+102303104,Ayush Kaushik,Breast Cancer Prediction Using Machine Learning,False,True,False,0,,PASS,
+102303104,Ayush Kaushik,Mastering Data Analysis with Pandas,False,True,False,0,,PASS,
+102303112,Atishay Jain,Working with BigQuery,False,True,False,0,,PASS,
+102303088,Haryiank Kumra,Tweet Emotion Recognition with TensorFlow,False,True,False,0,,PASS,
+102303112,Atishay Jain,Build a CI/CD Pipeline with Docker: From Code to Deployment,False,True,False,0,,PASS,
+102303104,Ayush Kaushik,PowerBI for Beginners: Data transformation,False,True,False,0,,PASS,
+102303112,Atishay Jain,Automate tasks and processes with Jira,False,True,False,0,,PASS,
+102303112,Atishay Jain,Getting Started with Azure DevOps Boards,False,False,True,80,,PASS,LLM Context Match (80%)
