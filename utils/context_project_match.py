@@ -158,6 +158,7 @@
 import os
 import json
 from google import genai
+from pydantic import BaseModel # Recommended for strict JSON
 
 # -----------------------------
 # Configure Gemini Client
@@ -166,6 +167,10 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 
+class EvaluationResult(BaseModel):
+    match: bool
+    confidence: int
+    reason: str
 
 # ---------------------------------------------------
 # MAIN CONTEXT MATCH FUNCTION (Gemini - New SDK)
@@ -223,9 +228,10 @@ Return STRICT JSON:
             model="gemini-1.5-flash",
             contents=prompt,
             config={
+                "response_mime_type": "application/json",
+                "response_schema": EvaluationResult,
                 "max_output_tokens": 150,
                 "temperature": 0.1,
-                "top_p": 0.8
             }
         )
 
