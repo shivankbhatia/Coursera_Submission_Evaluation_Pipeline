@@ -173,6 +173,9 @@ client = genai.Client(api_key=GEMINI_API_KEY)
 
 def llm_project_context_match(project_name, linkedin_text):
 
+    # reduce token size...
+    linkedin_text = linkedin_text[:2000]
+
     if not GEMINI_API_KEY:
         return {
             "match": False,
@@ -202,6 +205,7 @@ Evaluation Instructions:
    - Semantic similarity
 
 3. Must demonstrate hands-on work:
+   - Learning outcomes
    - Implementation
    - Code
    - Workflow
