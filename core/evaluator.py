@@ -4,12 +4,14 @@ from utils.context_project_match import llm_project_context_match
 
 
 def evaluate_student_fast_phase(row: dict):
+    print("START FAST PHASE")
 
     roll = row["Roll Number"]
     full_name = row["Full Name"]
     certificate_link = row["Coursera completion certificate link"].strip()
 
     # 1️⃣ Verify Coursera
+    print("Calling Coursera")
     coursera_data = verify_coursera_certificate(
         certificate_link,
         full_name
@@ -30,11 +32,14 @@ def evaluate_student_fast_phase(row: dict):
     completion_date = coursera_data.get("completion_date", "")
 
     # 2️⃣ LinkedIn Fast Match
+    print("Calling LinkedIn")
     linkedin_data = get_linkedin_observations(
         row["LinkedIn Post Link"],
         full_name,
         coursera_project
     )
+    print("LinkedIn Done")
+
 
     if linkedin_data.get("project_match"):
         return {
