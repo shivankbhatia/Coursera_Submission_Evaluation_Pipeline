@@ -81,7 +81,7 @@ async def evaluate_stream(roll_number: str):
                 payload = {
                     "row_id": idx,
                     "status": "Completed",
-                    "result": fast_result["data"]
+                    "result": fast_result["result"]
                 }
 
                 yield f"data: {json.dumps(payload)}\n\n"
