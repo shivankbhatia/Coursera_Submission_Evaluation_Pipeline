@@ -1,7 +1,8 @@
 import json
+import os
 import requests
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
+OLLAMA_URL = os.getenv("OLLAMA_URL")
 MODEL_NAME = "llama3.1:8b"
 
 
@@ -32,6 +33,13 @@ def run_llama(prompt, temperature=0.1):
 # ---------------------------------------------------
 
 def llm_project_context_match(project_name, linkedin_text):
+    if not OLLAMA_URL:
+        return {
+            "match": False,
+            "confidence": 0,
+            "reason": "LLM validation disabled in production"
+        }
+
     """
     Uses Llama 3.1 to determine if LinkedIn post
     genuinely relates to the project.
