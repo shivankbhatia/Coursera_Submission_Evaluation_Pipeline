@@ -62,11 +62,11 @@ async def evaluate_stream(roll_number: str):
             # If completed in fast phase
             if fast_result["phase"] == "completed":
 
-                yield f"data: {json.dumps({
-                    'row_id': idx,
-                    'status': 'Completed',
-                    'result': fast_result['result']
-                })}\n\n"
+                payload = {
+                    "index": index,
+                    "status": "Queued"
+                }
+                yield f"data: {json.dumps(payload)}\n\n"
 
                 continue
 
