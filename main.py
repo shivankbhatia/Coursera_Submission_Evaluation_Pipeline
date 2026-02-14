@@ -29,6 +29,48 @@ def debug_status(prefix, message):
     print(f"[{prefix}] {message}")
 
 
+# Handle the Invalid Coursera Links Submissions
+def handle_invalid_coursera_link(index, row, results):
+
+    global fast_completed
+
+    roll = row["Roll Number"]
+    certificate_link = row["Coursera completion certificate link"].strip()
+
+    result_entry = {
+        "Roll Number": roll,
+        "Full Name": row["Full Name"],
+        "Coursera Project": '-',
+        "Certificate Completion Date": '-',
+        "Project Mention Match": '-',
+        "Final Verdict": 'INVALID',
+        "Failure Reason": "Coursera link is invalid.",
+        "Duplicate Certificate": False,
+        "LLM Context Match": False,
+        "LLM Confidence": 0,
+    }
+
+    results[index] = result_entry
+
+    append_result_live([
+        roll,
+        row["Full Name"],
+        '-',
+        '-',
+        False,
+        "INVALID",
+        "Coursera link is invalid."
+    ])
+
+    with counter_lock:
+        fast_completed += 1
+
+        debug_status(
+            "FAST",
+            f"Completed: {fast_completed} | LLM Queue: {llm_queue.qsize()}"
+        )
+
+
 # -------------------------
 # LLM WORKER THREAD
 # -------------------------
@@ -88,7 +130,7 @@ def llm_worker(results):
 # -------------------------
 # FAST RECORD PROCESSING
 # -------------------------
-def process_fast_record(row, results, seen_certificates_by_roll):
+def process_fast_record(index, row, results, seen_certificates_by_roll):
 
     global fast_completed
 
@@ -102,7 +144,11 @@ def process_fast_record(row, results, seen_certificates_by_roll):
 
     coursera_project = coursera_data.get("coursera_project_name")
     completion_date = coursera_data.get("completion_date", "")
-
+    
+    status = coursera_data.get('Cert_Status')
+    if status == 'Fail':
+        handle_invalid_coursera_link(index, row, results)
+    
     linkedin_data = get_linkedin_observations(
         row["LinkedIn Post Link"],
         row["Full Name"],
@@ -132,9 +178,8 @@ def process_fast_record(row, results, seen_certificates_by_roll):
         "LLM Confidence": 0,
     }
 
-    with results_lock:
-        results.append(result_entry)
-        current_index = len(results) - 1
+    results[index] = result_entry
+    current_index = index
 
     # -------------------------
     # FAST VERDICT LOGIC
@@ -213,17 +258,26 @@ def run_pipeline(input_filename):
         t.start()
         workers.append(t)
 
-    subset = df.iloc[39:60]
+    subset = df.iloc[4449:4451].reset_index(drop=True)
+
+    results = [None] * len(subset)
 
     # FAST PARALLEL
     with ThreadPoolExecutor(max_workers=FAST_WORKERS) as executor:
 
         futures = []
 
-        for _, row in subset.iterrows():
+        for idx, row in subset.iterrows():
             futures.append(
-                executor.submit(process_fast_record, row, results, seen_certificates_by_roll)
+                executor.submit(
+                    process_fast_record,
+                    idx,
+                    row,
+                    results,
+                    seen_certificates_by_roll
+                )
             )
+
 
         for f in futures:
             f.result()
@@ -259,4 +313,4 @@ def run_pipeline(input_filename):
 
 
 if __name__ == "__main__":
-    run_pipeline("submission.csv")
+    run_pipeline("submission2.csv")

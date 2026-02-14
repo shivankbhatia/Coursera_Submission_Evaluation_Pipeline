@@ -1,22 +1,6 @@
 Roll Number,Full Name,Coursera Project,Certificate Completion Date,Project Mention Match,Final Verdict,Failure Reason
-102303045,Parth Garg,Breast Cancer Prediction Using Machine Learning,,True,PASS,
-102303048,Sushant Jindal,Working with BigQuery,,True,PASS,
-102303048,Sushant Jindal,Introduction to Generative AI,,True,PASS,
-102303048,Sushant Jindal,Build a CI/CD Pipeline with Docker: From Code to Deployment,,False,PASS,LLM Context Match (80%)
-102303052,Pratham Garg,Working with BigQuery,,True,PASS,
-102303048,Sushant Jindal,Machine Learning Pipelines with Azure ML Studio,,True,PASS,
-102303048,Sushant Jindal,Build a CI/CD Pipeline with Docker: From Code to Deployment,,False,FAIL,Duplicate certificate
-102303052,Pratham Garg,Introduction to AI,,True,PASS,
-102303048,Sushant Jindal,Introduction to Large Language Models,,True,PASS,
-102303052,pratham garg,Maximize Productivity With AI Tools,,True,PASS,
-102303052,pratham garg,Discover the Art of Prompting,,False,FAIL,LinkedIn post does not mention the Coursera project.
-102303052,Pratham Garg,Use AI Responsibly,,False,PASS,LLM Context Match (80%)
-102303052,Pratham garg,Discover the Art of Prompting,,True,FAIL,Duplicate certificate
-102303059,Sanyam Wadhwa,Detecting COVID-19 with Chest X-Ray using PyTorch,,False,PASS,LLM Context Match (80%)
-102303052,Pratham garg,Stay Ahead of the AI Curve,,True,PASS,
-102303059,Sanyam wadhwa,Command Line in Linux,,False,PASS,LLM Context Match (85%)
-102303052,Pratham garg,Use AI Responsibly,,True,FAIL,Duplicate certificate
-102303064,Vani Mohindru,Working with BigQuery,,True,PASS,
-102303059,Sanyam Wadhwa,Working with BigQuery,,False,PASS,LLM Context Match (80%)
-102303064,Vani Mohindru,Build a CI/CD Pipeline with Docker: From Code to Deployment,,True,PASS,
-102303064,Vani Mohindru,PowerBI for Beginners: Data transformation,,False,PASS,LLM Context Match (80%)
+102303651,Ravish sharma,Getting Started with Azure DevOps Boards,,False,FAIL,LinkedIn post does not mention the Coursera project.
+102303651,Ravish sharma,Detecting COVID-19 with Chest X-Ray using PyTorch,,True,PASS,
+102303651,Ravish sharma,Using probability distributions for real world problems in R,,False,PASS,LLM Context Match (90%)
+102303651,Ravish sharma,Business Analysis & Process Management,,False,FAIL,LinkedIn post does not mention the Coursera project.
+102303651,Ravish sharma,Hyperparameter Tuning with Keras Tuner,,True,PASS,
