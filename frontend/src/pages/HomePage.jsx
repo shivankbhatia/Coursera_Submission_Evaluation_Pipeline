@@ -41,7 +41,7 @@ function HomePage({
     let connectionEstablished = false;
 
     const eventSource = new EventSource(
-      `http://localhost:8000/evaluate-stream/${roll}`
+      `${import.meta.env.VITE_API_URL}/evaluate-stream/${roll}`
     );
 
     eventSource.onopen = () => {
