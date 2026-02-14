@@ -207,7 +207,6 @@ Evaluation Instructions:
 3. Must demonstrate hands-on work:
    - Learning outcomes
    - Implementation
-   - Code
    - Workflow
    - Technical output
 
