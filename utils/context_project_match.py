@@ -179,6 +179,7 @@ class EvaluationResult(BaseModel):
 def llm_project_context_match(project_name, linkedin_text):
 
     linkedin_text = linkedin_text[:1500]
+    print("LinkedIn Text Length:", len(linkedin_text))
 
     if not GEMINI_API_KEY:
         return {
