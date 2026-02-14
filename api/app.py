@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from pydantic import BaseModel
 import pandas as pd
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,12 +14,11 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # for development
+    allow_origins=["*"],  # tighten in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 # -------------------------
 # Load submission file ONCE
@@ -39,63 +38,85 @@ async def evaluate_stream(roll_number: str):
         submission_df["Roll Number"].astype(str) == roll_number
     ].reset_index(drop=True)
 
+    # -------------------------
+    # No records found
+    # -------------------------
     if matches.empty:
         async def error_stream():
-            yield f"data: {json.dumps({'error': 'Roll number not found'})}\n\n"
+            payload = {"error": "Roll number not found"}
+            yield f"data: {json.dumps(payload)}\n\n"
         return StreamingResponse(error_stream(), media_type="text/event-stream")
 
+    # -------------------------
+    # Main Stream Generator
+    # -------------------------
     async def event_generator():
 
         for idx, row in matches.iterrows():
 
-            # 1️⃣ Send Queued state immediately
-            yield f"data: {json.dumps({'row_id': idx, 'status': 'Queued'})}\n\n"
+            # 1️⃣ Queued
+            payload = {
+                "row_id": idx,
+                "status": "Queued"
+            }
+            yield f"data: {json.dumps(payload)}\n\n"
             await asyncio.sleep(0.1)
 
-            # 2️⃣ Send Evaluating state
-            yield f"data: {json.dumps({'row_id': idx, 'status': 'Evaluating'})}\n\n"
+            # 2️⃣ Evaluating
+            payload = {
+                "row_id": idx,
+                "status": "Evaluating"
+            }
+            yield f"data: {json.dumps(payload)}\n\n"
             await asyncio.sleep(0.1)
 
             # 3️⃣ FAST PHASE
             fast_result = evaluate_student_fast_phase(row)
 
-            # If completed in fast phase
+            # -------------------------
+            # Completed in FAST phase
+            # -------------------------
             if fast_result["phase"] == "completed":
 
                 payload = {
-                    "index": index,
-                    "status": "Queued"
+                    "row_id": idx,
+                    "status": "Completed",
+                    "result": fast_result["data"]
                 }
-                yield f"data: {json.dumps(payload)}\n\n"
 
+                yield f"data: {json.dumps(payload)}\n\n"
+                await asyncio.sleep(0.2)
                 continue
 
-            # 4️⃣ LLM REQUIRED
+            # -------------------------
+            # LLM REQUIRED
+            # -------------------------
             if fast_result["phase"] == "llm_required":
 
-                # Notify UI that slow validation started
-                yield f"data: {json.dumps({
-                    'row_id': idx,
-                    'status': 'LLM Validation (may take 1-2 minutes)'
-                })}\n\n"
-
-                # Small pause to allow UI update
+                # Notify frontend slow validation
+                payload = {
+                    "row_id": idx,
+                    "status": "LLM Validation (may take 1-2 minutes)"
+                }
+                yield f"data: {json.dumps(payload)}\n\n"
                 await asyncio.sleep(0.2)
 
-                # Run slow LLM phase
+                # Run LLM
                 final_result = evaluate_student_llm_phase(
                     fast_result["data"]
                 )
 
-                yield f"data: {json.dumps({
-                    'row_id': idx,
-                    'status': 'Completed',
-                    'result': final_result
-                })}\n\n"
+                payload = {
+                    "row_id": idx,
+                    "status": "Completed",
+                    "result": final_result
+                }
 
-            await asyncio.sleep(0.2)
+                yield f"data: {json.dumps(payload)}\n\n"
+                await asyncio.sleep(0.2)
 
-        # Optional: Signal stream end
-        yield f"data: {json.dumps({'done': True})}\n\n"
+        # Stream finished
+        payload = {"done": True}
+        yield f"data: {json.dumps(payload)}\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
