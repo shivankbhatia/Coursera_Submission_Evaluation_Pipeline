@@ -178,7 +178,6 @@ class EvaluationResult(BaseModel):
 
 def llm_project_context_match(project_name, linkedin_text):
 
-    # reduce token size...
     linkedin_text = linkedin_text[:1500]
 
     if not GEMINI_API_KEY:
@@ -197,30 +196,12 @@ Project Title:
 LinkedIn Post:
 {linkedin_text}
 
-Evaluation Instructions:
+Rules:
+- If ANY project meaningfully matches, return true.
+- Use semantic similarity.
+- Must demonstrate hands-on work.
 
-1. The post may contain MULTIPLE projects.
-   If ANY one corresponds meaningfully to the given Project Title,
-   mark match = true.
-
-2. Accept minor variations:
-   - Abbreviations
-   - Reordered words
-   - Slight phrasing differences
-   - Semantic similarity
-
-3. Must demonstrate hands-on work:
-   - Learning outcomes
-   - Implementation
-   - Workflow
-   - Technical output
-
-Return STRICT JSON:
-{{
- "match": true or false,
- "confidence": number (0-100),
- "reason": "short explanation"
-}}
+Return STRICT JSON only.
 """
 
     try:
@@ -230,32 +211,111 @@ Return STRICT JSON:
             config={
                 "response_mime_type": "application/json",
                 "response_schema": EvaluationResult,
-                "max_output_tokens": 150,
+                "max_output_tokens": 120,
                 "temperature": 0.1,
             }
         )
 
-        raw_output = response.text
+        # 🔥 IMPORTANT — no manual parsing needed
+        structured_output = response.parsed
 
-        # Safe JSON extraction
-        json_start = raw_output.find("{")
-        json_end = raw_output.rfind("}") + 1
-        json_str = raw_output[json_start:json_end]
+        print("Gemini structured output:", structured_output)
 
-        result = json.loads(json_str)
-
-        # Confidence calibration
-        if not result["match"]:
-            result["confidence"] = min(result["confidence"], 40)
-
-        if result["match"] and result["confidence"] < 60:
-            result["match"] = False
-
-        return result
+        return {
+            "match": structured_output.match,
+            "confidence": structured_output.confidence,
+            "reason": structured_output.reason
+        }
 
     except Exception as e:
+        print("Gemini ERROR:", e)
         return {
             "match": False,
             "confidence": 0,
             "reason": f"Gemini error: {str(e)}"
         }
+
+
+# def llm_project_context_match(project_name, linkedin_text):
+
+#     # reduce token size...
+#     linkedin_text = linkedin_text[:1500]
+
+#     if not GEMINI_API_KEY:
+#         return {
+#             "match": False,
+#             "confidence": 0,
+#             "reason": "Gemini API key not configured"
+#         }
+
+#     prompt = f"""
+# You are a STRICT but INTELLIGENT academic evaluator.
+
+# Project Title:
+# {project_name}
+
+# LinkedIn Post:
+# {linkedin_text}
+
+# Evaluation Instructions:
+
+# 1. The post may contain MULTIPLE projects.
+#    If ANY one corresponds meaningfully to the given Project Title,
+#    mark match = true.
+
+# 2. Accept minor variations:
+#    - Abbreviations
+#    - Reordered words
+#    - Slight phrasing differences
+#    - Semantic similarity
+
+# 3. Must demonstrate hands-on work:
+#    - Learning outcomes
+#    - Implementation
+#    - Workflow
+#    - Technical output
+
+# Return STRICT JSON:
+# {{
+#  "match": true or false,
+#  "confidence": number (0-100),
+#  "reason": "short explanation"
+# }}
+# """
+
+#     try:
+#         response = client.models.generate_content(
+#             model="gemini-1.5-flash",
+#             contents=prompt,
+#             config={
+#                 "response_mime_type": "application/json",
+#                 "response_schema": EvaluationResult,
+#                 "max_output_tokens": 150,
+#                 "temperature": 0.1,
+#             }
+#         )
+
+#         raw_output = response.text
+
+#         # Safe JSON extraction
+#         json_start = raw_output.find("{")
+#         json_end = raw_output.rfind("}") + 1
+#         json_str = raw_output[json_start:json_end]
+
+#         result = json.loads(json_str)
+
+#         # Confidence calibration
+#         if not result["match"]:
+#             result["confidence"] = min(result["confidence"], 40)
+
+#         if result["match"] and result["confidence"] < 60:
+#             result["match"] = False
+
+#         return result
+
+#     except Exception as e:
+#         return {
+#             "match": False,
+#             "confidence": 0,
+#             "reason": f"Gemini error: {str(e)}"
+#         }
