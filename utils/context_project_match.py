@@ -174,7 +174,7 @@ client = genai.Client(api_key=GEMINI_API_KEY)
 def llm_project_context_match(project_name, linkedin_text):
 
     # reduce token size...
-    linkedin_text = linkedin_text[:2000]
+    linkedin_text = linkedin_text[:1500]
 
     if not GEMINI_API_KEY:
         return {
@@ -221,7 +221,12 @@ Return STRICT JSON:
     try:
         response = client.models.generate_content(
             model="gemini-1.5-flash",
-            contents=prompt
+            contents=prompt,
+            config={
+                "max_output_tokens": 150,
+                "temperature": 0.1,
+                "top_p": 0.8
+            }
         )
 
         raw_output = response.text
