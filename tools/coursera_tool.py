@@ -21,10 +21,12 @@ def verify_coursera_certificate(url, expected_name=None):
                 og_data[tag["property"]] = tag.get("content", "")
 
         project_name = og_data.get("og:title")
+        completion_date = og_data.get("og:description")  # Often contains completion info
+
         if project_name:
             project_name = " ".join(project_name.split()[3:])
 
-        # Static HTML text extraction
+        # Extract static page text
         page_text = soup.get_text(separator=" ")
 
         name_found = False
@@ -35,26 +37,50 @@ def verify_coursera_certificate(url, expected_name=None):
         # -------------------------
         # PLAYWRIGHT FALLBACK
         # -------------------------
-        if not name_found and expected_name:
+        # if not name_found and expected_name:
 
-            print("⚠ Name not found in static HTML → Using Playwright fallback")
+        #     print("\n⚠ Playwright fallback triggered")
+        #     print(f"URL: {url}")
 
-            with sync_playwright() as p:
-                browser = p.chromium.launch(headless=True)
-                page = browser.new_page()
+            # with sync_playwright() as p:
 
-                page.goto(url, wait_until="networkidle")
+            #     browser = p.chromium.launch(headless=True)
+            #     page = browser.new_page()
 
-                rendered_text = page.locator("body").inner_text()
+            #     page.goto(url, wait_until="networkidle")
 
-                if expected_name.lower() in rendered_text.lower():
-                    name_found = True
+            #     rendered_text = page.locator("body").inner_text()
 
-                browser.close()
+            #     # Try extracting completion date from rendered page
+            #     completion_date_rendered = completion_date
+            #     if "completed" in rendered_text.lower():
+            #         completion_date_rendered = "Found in rendered page"
 
+            #     # Check name again
+            #     if expected_name.lower() in rendered_text.lower():
+            #         name_found = True
+
+            #     # ⭐ PRINT REQUIRED DATA
+            #     print("----- Coursera Extracted Data (Fallback) -----")
+            #     print(f"Student Name          : {expected_name}")
+            #     print(f"Coursera Project Name : {project_name}")
+            #     print(f"Completion Date       : {completion_date_rendered}")
+            #     print("------------------------------------------------\n")
+
+            #     browser.close()
+
+        if not name_found  and expected_name:
+            return {
+                "Cert_Status": "Fail",
+                "coursera_project_name": '',
+                "completion_date": '',
+                "student_name_found": '',
+            }
+        
         return {
             "Cert_Status": "Success",
             "coursera_project_name": project_name,
+            "completion_date": completion_date,
             "student_name_found": name_found,
         }
 
